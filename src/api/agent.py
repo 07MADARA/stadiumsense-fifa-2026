@@ -7,10 +7,18 @@ load_dotenv()
 
 # Configure Gemini API
 API_KEY = os.getenv("GEMINI_API_KEY")
+if not API_KEY or API_KEY == "your_api_key_here":
+    try:
+        import streamlit as st
+        API_KEY = st.secrets.get("GEMINI_API_KEY")
+    except Exception:
+        pass
+
 if API_KEY and API_KEY != "your_api_key_here":
     genai.configure(api_key=API_KEY)
 else:
     print("WARNING: GEMINI_API_KEY is not set correctly. GenAI features will fail.")
+
 
 # Set up the model
 generation_config = {
@@ -38,8 +46,20 @@ def get_actionable_insights(telemetry_data: dict) -> str:
     """
     Sends telemetry data to Gemini and returns actionable insights.
     """
+    global API_KEY
     if not API_KEY or API_KEY == "your_api_key_here":
-        return "Error: Gemini API Key not configured. Please set GEMINI_API_KEY in the .env file."
+        API_KEY = os.getenv("GEMINI_API_KEY")
+        if not API_KEY or API_KEY == "your_api_key_here":
+            try:
+                import streamlit as st
+                API_KEY = st.secrets.get("GEMINI_API_KEY")
+            except Exception:
+                pass
+        if API_KEY and API_KEY != "your_api_key_here":
+            genai.configure(api_key=API_KEY)
+
+    if not API_KEY or API_KEY == "your_api_key_here":
+        return "Error: Gemini API Key not configured. Please set GEMINI_API_KEY in Settings -> Secrets on Streamlit Cloud."
         
     try:
         model = genai.GenerativeModel(

@@ -1,13 +1,14 @@
 import streamlit as st
-import requests
 import os
 from dotenv import load_dotenv
 import pandas as pd
 import time
 
+from src.data.simulator import generate_telemetry_data
+from src.api.agent import get_actionable_insights
+
 load_dotenv()
 
-API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000")
 
 # Page Configuration
 st.set_page_config(
@@ -52,27 +53,21 @@ st.markdown("""
 
 
 def fetch_telemetry():
-    """Fetches real-time simulated telemetry from the backend."""
+    """Simulates real-time telemetry data directly."""
     try:
-        response = requests.get(f"{API_BASE_URL}/api/telemetry")
-        if response.status_code == 200:
-            return response.json()
-        st.error(f"Failed to fetch data: {response.status_code}")
-        return None
-    except requests.exceptions.ConnectionError:
-        st.error("Failed to connect to backend API. Please ensure the FastAPI server is running.")
+        return generate_telemetry_data()
+    except Exception as e:
+        st.error(f"Failed to generate telemetry data: {e}")
         return None
 
 @st.cache_data(ttl=30, show_spinner=False)
 def fetch_insights(telemetry_data):
-    """Fetches AI insights from the backend based on telemetry data."""
+    """Fetches AI insights directly using the Gemini API."""
     try:
-        response = requests.post(f"{API_BASE_URL}/api/insights", json={"telemetry": telemetry_data})
-        if response.status_code == 200:
-            return response.json().get("insights", "No insights returned.")
-        return f"Error: Backend returned {response.status_code}"
+        return get_actionable_insights(telemetry_data)
     except Exception as e:
-        return f"Error connecting to AI service: {e}"
+        return f"Error generating insights: {e}"
+
 
 # Dashboard Header
 st.markdown("<h1 class='header-style'>🏟️ StadiumSense AI Command Center</h1>", unsafe_allow_html=True)
@@ -141,10 +136,19 @@ with col_right:
         """, unsafe_allow_html=True)
         
 st.sidebar.markdown("### System Status")
-st.sidebar.success("🟢 API Connected")
-if os.getenv("GEMINI_API_KEY") and os.getenv("GEMINI_API_KEY") != "your_api_key_here":
+st.sidebar.success("🟢 StadiumSense Core: Active")
+
+# Check API key from env or st.secrets
+api_key = os.getenv("GEMINI_API_KEY")
+if not api_key:
+    try:
+        api_key = st.secrets.get("GEMINI_API_KEY")
+    except Exception:
+        pass
+
+if api_key and api_key != "your_api_key_here":
     st.sidebar.success("🟢 Gemini API Ready")
 else:
-    st.sidebar.warning("🟡 Gemini API Key missing (.env)")
+    st.sidebar.warning("🟡 Gemini API Key missing (Settings -> Secrets)")
     
 st.sidebar.info("Data updates every few seconds in a real production environment. Click 'Refresh Telemetry' to simulate the next tick.")
