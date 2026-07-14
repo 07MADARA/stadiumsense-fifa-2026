@@ -63,6 +63,7 @@ def fetch_telemetry():
         st.error("Failed to connect to backend API. Please ensure the FastAPI server is running.")
         return None
 
+@st.cache_data(ttl=30, show_spinner=False)
 def fetch_insights(telemetry_data):
     """Fetches AI insights from the backend based on telemetry data."""
     try:

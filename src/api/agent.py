@@ -1,16 +1,19 @@
 import os
 import json
-import google.generativeai as genai
+import vertexai
+from vertexai.generative_models import GenerativeModel
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Configure Gemini API
-API_KEY = os.getenv("GEMINI_API_KEY")
-if API_KEY and API_KEY != "your_api_key_here":
-    genai.configure(api_key=API_KEY)
-else:
-    print("WARNING: GEMINI_API_KEY is not set correctly. GenAI features will fail.")
+# Initialize Vertex AI
+PROJECT_ID = os.getenv("PROJECT_ID", "your-google-cloud-project-id")
+REGION = os.getenv("REGION", "us-central1")
+
+try:
+    vertexai.init(project=PROJECT_ID, location=REGION)
+except Exception as e:
+    print(f"WARNING: Vertex AI initialization failed: {e}")
 
 # Set up the model
 generation_config = {
@@ -36,21 +39,20 @@ Guidelines:
 
 def get_actionable_insights(telemetry_data: dict) -> str:
     """
-    Sends telemetry data to Gemini and returns actionable insights.
+    Sends telemetry data to Vertex AI Gemini and returns actionable insights.
     """
-    if not API_KEY or API_KEY == "your_api_key_here":
-        return "Error: Gemini API Key not configured. Please set GEMINI_API_KEY in the .env file."
-        
     try:
-        model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash",
-            generation_config=generation_config,
-            system_instruction=SYSTEM_INSTRUCTION
+        model = GenerativeModel(
+            model_name="gemini-1.5-flash-preview-0514", # Using a common Vertex AI model name
+            system_instruction=[SYSTEM_INSTRUCTION] # Vertex AI expects a list for system instructions
         )
         
         prompt = f"Current Stadium Telemetry JSON:\n{json.dumps(telemetry_data, indent=2)}\n\nPlease provide the operational action plan."
         
-        response = model.generate_content(prompt)
+        response = model.generate_content(
+            prompt,
+            generation_config=generation_config
+        )
         return response.text
     except Exception as e:
-        return f"Failed to generate insights: {str(e)}"
+        return f"Failed to generate insights via Vertex AI: {str(e)}"
