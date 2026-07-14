@@ -1,32 +1,10 @@
 import os
 import json
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 
 load_dotenv()
-
-# Configure Gemini API
-API_KEY = os.getenv("GEMINI_API_KEY")
-if not API_KEY or API_KEY == "your_api_key_here":
-    try:
-        import streamlit as st
-        API_KEY = st.secrets.get("GEMINI_API_KEY")
-    except Exception:
-        pass
-
-if API_KEY and API_KEY != "your_api_key_here":
-    genai.configure(api_key=API_KEY)
-else:
-    print("WARNING: GEMINI_API_KEY is not set correctly. GenAI features will fail.")
-
-
-# Set up the model
-generation_config = {
-  "temperature": 0.2, # Low temperature for more deterministic, operational advice
-  "top_p": 0.95,
-  "top_k": 64,
-  "max_output_tokens": 1024,
-}
 
 SYSTEM_INSTRUCTION = """
 You are an expert FIFA Venue Operations Manager AI Assistant for the 2026 World Cup.
@@ -44,33 +22,38 @@ Guidelines:
 
 def get_actionable_insights(telemetry_data: dict) -> str:
     """
-    Sends telemetry data to Gemini and returns actionable insights.
+    Sends telemetry data to Gemini using the modern google-genai SDK and returns actionable insights.
     """
-    global API_KEY
-    if not API_KEY or API_KEY == "your_api_key_here":
-        API_KEY = os.getenv("GEMINI_API_KEY")
-        if not API_KEY or API_KEY == "your_api_key_here":
-            try:
-                import streamlit as st
-                API_KEY = st.secrets.get("GEMINI_API_KEY")
-            except Exception:
-                pass
-        if API_KEY and API_KEY != "your_api_key_here":
-            genai.configure(api_key=API_KEY)
+    # Look up Gemini API Key
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key or api_key == "your_api_key_here":
+        try:
+            import streamlit as st
+            api_key = st.secrets.get("GEMINI_API_KEY")
+        except Exception:
+            pass
 
-    if not API_KEY or API_KEY == "your_api_key_here":
+    if not api_key or api_key == "your_api_key_here":
         return "Error: Gemini API Key not configured. Please set GEMINI_API_KEY in Settings -> Secrets on Streamlit Cloud."
         
     try:
-        model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash",
-            generation_config=generation_config,
-            system_instruction=SYSTEM_INSTRUCTION
-        )
+        # Initialize the modern google-genai Client
+        client = genai.Client(api_key=api_key)
         
         prompt = f"Current Stadium Telemetry JSON:\n{json.dumps(telemetry_data, indent=2)}\n\nPlease provide the operational action plan."
         
-        response = model.generate_content(prompt)
+        # Call generate_content using the new SDK syntax
+        response = client.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_INSTRUCTION,
+                temperature=0.2,
+                top_p=0.95,
+                top_k=64,
+                max_output_tokens=1024,
+            )
+        )
         return response.text
     except Exception as e:
         return f"Failed to generate insights: {str(e)}"
