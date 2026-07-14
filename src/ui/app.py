@@ -1,8 +1,12 @@
-import streamlit as st
+import sys
 import os
+import streamlit as st
 from dotenv import load_dotenv
 import pandas as pd
 import time
+
+# Add the root project directory to the Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 from src.data.simulator import generate_telemetry_data
 from src.api.agent import get_actionable_insights
