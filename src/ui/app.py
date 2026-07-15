@@ -129,7 +129,7 @@ with col_right:
     st.subheader("🧠 GenAI Operational Insights")
     
     if telemetry:
-        with st.spinner("Analyzing telemetry with Gemini 1.5 Flash..."):
+        with st.spinner("Analyzing telemetry with Gemini 2.5 Flash..."):
             insights = fetch_insights(telemetry)
             
         st.markdown(f"""

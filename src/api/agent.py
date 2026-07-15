@@ -44,7 +44,7 @@ def get_actionable_insights(telemetry_data: dict) -> str:
         
         # Call generate_content using the new SDK syntax
         response = client.models.generate_content(
-            model="gemini-1.5-flash",
+            model="gemini-2.5-flash",
             contents=prompt,
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_INSTRUCTION,

@@ -6,7 +6,7 @@
 
 **The Problem**: During major sporting events like the World Cup, venue managers and stadium staff struggle to identify and resolve bottleneck areas—such as entry gates, food stalls, and restrooms—in real-time. Unmanaged crowd density leads to poor fan experience and safety hazards.
 
-**The Solution**: A high-performance, real-time dashboard that processes simulated stadium telemetry (IoT crowd density sensors) and leverages Google's **Vertex AI (Gemini 1.5 Flash)** to provide instant, natural language operational commands to security and venue staff.
+**The Solution**: A high-performance, real-time dashboard that processes simulated stadium telemetry (IoT crowd density sensors) and leverages Google's **Vertex AI (Gemini 2.5 Flash)** to provide instant, natural language operational commands to security and venue staff.
 
 ## Spec-Driven Development via Antigravity Agent Teams
 
@@ -19,7 +19,7 @@ The AI agents generated the infrastructure-as-code (`deploy.sh`) to automaticall
 flowchart LR
     A[IoT Simulator] -->|JSON Telemetry| B[Google Cloud Pub/Sub]
     B -->|Ingestion| C[FastAPI Backend / Cloud Run]
-    C -->|Context + Prompt| D[Vertex AI / Gemini 1.5 Flash]
+    C -->|Context + Prompt| D[Vertex AI / Gemini 2.5 Flash]
     D -->|Actionable Insights| C
     C <-->|Read/Write State| E[Firestore Native Database]
     E <-->|Live Updates| F[Streamlit Dashboard]
